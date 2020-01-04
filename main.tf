@@ -122,28 +122,10 @@ resource "aws_iam_role" "ecs_service" {
   tags               = module.service_label.tags
 }
 
-data "aws_iam_policy_document" "ecs_service_policy" {
-  count = var.enabled ? 1 : 0
-
-  statement {
-    effect    = "Allow"
-    resources = ["*"]
-
-    actions = [
-      "elasticloadbalancing:Describe*",
-      "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-      "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-      "ec2:Describe*",
-      "ec2:AuthorizeSecurityGroupIngress"
-    ]
-  }
-}
-
-resource "aws_iam_role_policy" "ecs_service" {
-  count  = var.enabled ? 1 : 0
-  name   = module.service_label.id
-  policy = join("", data.aws_iam_policy_document.ecs_service_policy.*.json)
-  role   = join("", aws_iam_role.ecs_service.*.id)
+resource "aws_iam_role_policy_attachment" "ecs_service" {
+  count       = var.enabled ? 1 : 0
+  role        = join("", aws_iam_role.ecs_service.*.id)
+  policy_arn  = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
 }
 
 # IAM role that the Amazon ECS container agent and the Docker daemon can assume
@@ -229,6 +211,16 @@ resource "aws_security_group_rule" "alb" {
   to_port                  = var.container_port
   protocol                 = "tcp"
   source_security_group_id = var.alb_security_group
+  security_group_id        = join("", aws_security_group.ecs_service.*.id)
+}
+
+resource "aws_security_group_rule" "nlb" {
+  count                    = var.enabled && var.use_nlb_security_group ? 1 : 0
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = var.nlb_container_port
+  protocol                 = var.nlb_container_protocol
+  source_security_group_id = var.nlb_security_group
   security_group_id        = join("", aws_security_group.ecs_service.*.id)
 }
 

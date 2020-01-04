@@ -50,6 +50,12 @@ variable "alb_security_group" {
   default     = ""
 }
 
+variable "nlb_security_group" {
+  type        = string
+  description = "Security group of the NLB"
+  default     = ""
+}
+
 variable "ecs_cluster_arn" {
   type        = string
   description = "The ARN of the ECS cluster where service will be provisioned"
@@ -75,6 +81,18 @@ variable "container_port" {
   type        = number
   description = "The port on the container to allow via the ingress security group"
   default     = 80
+}
+
+variable "nlb_container_port" {
+  type        = number
+  description = "The port on the container to allow via the NLB ingress security group"
+  default     = 80
+}
+
+variable "nlb_container_protocol" {
+  type        = string
+  description = "The protocol to allow on the NLB ingress security group"
+  default     = "tcp"
 }
 
 variable "subnet_ids" {
@@ -239,5 +257,11 @@ variable "service_registries" {
 variable "use_alb_security_group" {
   type        = bool
   description = "A flag to enable/disable adding the ingress rule to the ALB security group"
+  default     = false
+}
+
+variable "use_nlb_security_group" {
+  type        = bool
+  description = "A flag to enable/disable adding the ingress rule to the NLB security group"
   default     = false
 }
